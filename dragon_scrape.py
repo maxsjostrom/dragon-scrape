@@ -12,11 +12,17 @@ HEADERS = {
 
 
 def fetch_page(page_number):
-    """Fetch a single page of games."""
+    '''
+    Fetch the HTML content of a page from the Dragonslair website.
+    '''
+
+    # Parameters for the request
     params = {
         'page': page_number,
         'restore_auto_pagination': 'true'
     }
+
+    # Make the request
     response = requests.get(BASE_URL, headers=HEADERS, params=params)
     if response.status_code == 200:
         return response.text
@@ -27,7 +33,9 @@ def fetch_page(page_number):
 
 
 def parse_games(page_content):
-    """Parse game details (name and state) from the page HTML."""
+    '''
+    Parse the HTML content of a page and extract the game data.
+    '''
     soup = BeautifulSoup(page_content, 'html.parser')
     games = []
     
@@ -63,10 +71,13 @@ def parse_games(page_content):
 
 
 def scrape_all_pages():
-    """Scrape all pages until no more data is loaded."""
+    '''
+    Scrape all pages of the Dragonslair website and return a list of all games.
+    '''
     all_games = []
     page_number = 1
 
+    # Loop through all pages until no more games are found
     while page_number < 20:
         print(f"Fetching page {page_number}...")
         page_content = fetch_page(page_number)
@@ -84,6 +95,9 @@ def scrape_all_pages():
     return all_games
 
 def clean_data(all_games):
+    '''
+    Clean the list of games and convert it to a DataFrame.
+    '''
     # Convert the list of games to a DataFrame
     df = pd.DataFrame(all_games)
     # Replace the state values to be consistently in English
@@ -98,18 +112,23 @@ def clean_data(all_games):
     return df
 
 def generate_output(new_run):
+    '''
+    Generate the output files and compare the new run with the previous run.
+    '''
+    # Load the previous run
     try:
         previous_run = pd.read_csv('dragonslair.csv')
     except FileNotFoundError:
+        # If the file doesn't exist, create an empty DataFrame
         previous_run = pd.DataFrame(columns=['name', 'state_current', 'state_previous' , 'state_since', 'status'])
 
+    # Rename the columns for the comparison
     previous_run = previous_run.rename(columns={'state_current': 'state'})
     previous_run.drop(columns=['state_previous'], inplace=True)
 
+    # Merge the previous and new runs for comparison
     comparison = pd.merge(previous_run, new_run, on='name', how='outer', suffixes=('_previous', '_current'))
 
-
-    #comparison['state_since'] = pd.NaT
     current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     # Update the 'status' column based on the state changes
