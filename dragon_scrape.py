@@ -84,9 +84,16 @@ def scrape_all_pages():
     return all_games
 
 def clean_data(all_games):
+    # Convert the list of games to a DataFrame
     df = pd.DataFrame(all_games)
+    # Replace the state values to be consistently in English
     df.loc[df['state'] == 'Beställningsvara', 'state'] = 'Unavailable'
+    # Remove any games with the name 'Unknown'
     df = df[df['name'] != 'Unknown'].reset_index(drop=True)
+    # Replace commas with semicolons in the game names
+    df['name'] = df['name'].str.replace(',', ';')
+
+
 
     return df
 
@@ -107,8 +114,8 @@ def generate_output(new_run):
 
     # Update the 'status' column based on the state changes
     comparison['status'] = 'No Change'
-    comparison.loc[comparison['state_previous'].isna(), 'status'] = 'New Game'
     comparison.loc[comparison['state_previous'] != comparison['state_current'], 'status'] = 'State Change'
+    comparison.loc[comparison['state_previous'].isna(), 'status'] = 'New Game'
 
     # Update the 'state_since' column to the current time where applicable
     comparison.loc[comparison['state_since'].isna(), 'state_since'] = current_time
@@ -118,9 +125,9 @@ def generate_output(new_run):
     comparison = comparison[['name', 'state_previous', 'state_current', 'state_since', 'status']]
 
     # Save the new run
-    comparison.to_csv('dragonslair.csv', index=False, sep='|')
-    differences = comparison[comparison['status'] == 'State Change']
-    differences.to_csv('dragonslair_changes.csv', index=False, sep='|')
+    comparison.to_csv('output/dragonslair.csv', index=False)
+    differences = comparison[(comparison['status'] == 'State Change') | (comparison['status'] == 'New Game')]
+    differences.to_csv('output/dragonslair_changes.csv', index=False)
 
     return comparison, differences
 
