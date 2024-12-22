@@ -1,51 +1,8 @@
 import requests
 import xml.etree.ElementTree as etree
 import pandas as pd
-import numpy as np
 import re
 import time
-
-def get_game_details(game_id):
-    url = f"https://boardgamegeek.com/xmlapi2/thing"
-    params = {'id': game_id,
-              'stats': 1}
-    response = requests.get(url, params=params)
-    
-    print(response.status_code)
-
-    for attempt in range(3):
-        if response.status_code == 200:
-            # Parse the XML response
-            root = etree.fromstring(response.content)
-            game = root.find("item")
-            best_with = game.find(".//poll-summary/result[@name='bestwith']").get("value")
-            recommended_with = game.find(".//poll-summary/result[@name='recommmendedwith']").get("value")
-            title = game.find("name").get("value")
-            year = game.find("yearpublished").get("value")
-            avg_rating = game.find(".//statistics/ratings/average").get("value")
-            no_ratings = game.find(".//statistics/ratings/usersrated").get("value")
-            bgg_rank = game.find(".//statistics/ratings/ranks/rank[@name='boardgame']").get("value")
-            #description = game.find("description").text
-            print(f"Title: {title}, Year: {year}, Best with: {best_with}, Reccomended with: {recommended_with}, Avg rating: {avg_rating}, No of ratings: {no_ratings}, bgg_rank: {bgg_rank}")
-
-            return pd.DataFrame({
-                        'title': [title], 
-                        'id': [game_id],
-                        'year': [year], 
-                        'best_with': [best_with], 
-                        'recommended_with': [recommended_with], 
-                        'avg_rating': [avg_rating], 
-                        'no_ratings': [no_ratings], 
-                        'bgg_rank': [bgg_rank]})
-        
-        elif response.status_code == 429 & attempt == 1:  # Rate limit
-                retry_after = int(response.headers.get("Retry-After", 5))  # Default to 2 seconds
-                print(f"Rate limited. Retrying after {retry_after} seconds...")
-                time.sleep(retry_after)
-
-        elif attempt > 1:
-            print(f"Failed with status {response.status_code}. Retrying...")
-            time.sleep(3 ** attempt)  # Exponential backoff
         
 def clean_name(name):
     # Remove any language tags
@@ -92,7 +49,49 @@ def get_bgg_id(dl_name):
     else:
         return dl_name, ''
 
+def get_game_details(game_id):
+    ''' Get the details for a game from the BoardGameGeek API. '''
+    url = f"https://boardgamegeek.com/xmlapi2/thing"
+    params = {'id': game_id,
+              'stats': 1}
+    response = requests.get(url, params=params)
+    
+    print(response.status_code)
 
+    for attempt in range(3):
+        if response.status_code == 200:
+            # Parse the XML response
+            root = etree.fromstring(response.content)
+            game = root.find("item")
+            best_with = game.find(".//poll-summary/result[@name='bestwith']").get("value")
+            recommended_with = game.find(".//poll-summary/result[@name='recommmendedwith']").get("value")
+            title = game.find("name").get("value")
+            year = game.find("yearpublished").get("value")
+            avg_rating = game.find(".//statistics/ratings/average").get("value")
+            no_ratings = game.find(".//statistics/ratings/usersrated").get("value")
+            bgg_rank = game.find(".//statistics/ratings/ranks/rank[@name='boardgame']").get("value")
+            #description = game.find("description").text
+            
+            print(f"Title: {title}, Year: {year}, Best with: {best_with}, Reccomended with: {recommended_with}, Avg rating: {avg_rating}, No of ratings: {no_ratings}, bgg_rank: {bgg_rank}")
+
+            return pd.DataFrame({
+                        'title': [title], 
+                        'id': [game_id],
+                        'year': [year], 
+                        'best_with': [best_with], 
+                        'recommended_with': [recommended_with], 
+                        'avg_rating': [avg_rating], 
+                        'no_ratings': [no_ratings], 
+                        'bgg_rank': [bgg_rank]})
+        
+        elif response.status_code == 429 & attempt == 1:  # Rate limit
+                retry_after = int(response.headers.get("Retry-After", 5))  # Default to 2 seconds
+                print(f"Rate limited. Retrying after {retry_after} seconds...")
+                time.sleep(retry_after)
+
+        elif attempt > 1:
+            print(f"Failed with status {response.status_code}. Retrying...")
+            time.sleep(3 ** attempt)  # Exponential backoff
 
 def call_bgg_for_id(game_list):
     id_list = []
