@@ -46,15 +46,14 @@ def get_game_details(game_id):
 
         elif attempt > 1:
             print(f"Failed with status {response.status_code}. Retrying...")
-            time.sleep(5 ** attempt)  # Exponential backoff
-    
-    
+            time.sleep(3 ** attempt)  # Exponential backoff
+        
 def clean_name(name):
     # Remove any language tags
     name = re.sub(r'\(.*\)', '', name) # Remove anything in parentheses
     return name.strip()
 
-def get_details(dl_name):
+def get_bgg_id(dl_name):
     # Clean the name
     cleaned_name = clean_name(dl_name)
 
@@ -67,45 +66,45 @@ def get_details(dl_name):
         # Parse the XML response
         root = etree.fromstring(response.content)
         game = root.findall("item")
-       # print(game)
 
+        # Loop through the results
         for item in game:
+            # Get the name of the game
             name = item.find("name").get("value")
             
+            # Check for exact match and return the ID
             if name == cleaned_name:
                 id = item.get("id")
-                # print(f"Found game: {name}")
-                # print(item.get("id"))
-                
                 return dl_name, item.get("id")
         
         # If exact match not found return the first result
         if game:
             id = game[0].get("id")
-            # print(f"Found game: {cleaned_name}")
-            # print(game[0].get("id"))
-            
             return dl_name, game[0].get("id")
+        # If no results found return unknown
         else:
             return dl_name, "Unknown"
-    
+    if response.status_code == 429:
+        print("Rate limited. Retrying after 10 seconds...")
+        time.sleep(10)
+        return get_bgg_id(dl_name)
 
+    # If request still fails return null
     else:
-        return dl_name, "Unknown"
-        #print(f"Game not found: {name}")
-        #print(f"Failed to fetch game details. Status code: {response.status_code}")
+        return dl_name, ''
 
 
-def get_bgg_id(game_list):
+
+def call_bgg_for_id(game_list):
     id_list = []
     
     for game in game_list:
         print(f"Searching for game: {game}")
-        name, id = get_details(game)
+        name, id = get_bgg_id(game)
         id_list.append([name, id])
     return id_list
 
-def get_enriched_data(bgg_data):
+def call_bgg_for_details(bgg_data):
     bgg_enrich = pd.DataFrame(columns=['title', 'year', 'best_with', 'recommended_with', 'avg_rating', 'no_ratings', 'bgg_rank'])
 
     for id in bgg_data['id']:
@@ -121,13 +120,48 @@ def get_enriched_data(bgg_data):
 prev_dragons_lair_data = pd.read_csv('output/dragonslair.csv')
 prev_bgg_data = pd.read_csv('output/bgg_output.csv')
 prev_bgg_enriched_data = pd.read_csv('output/bgg_enrich.csv')
+prev_bgg_enriched_data['id'] = prev_bgg_enriched_data['id'].astype(str)
+prev_final_output = pd.read_csv('output/final_data.csv')
 
+new_games = prev_dragons_lair_data.loc[prev_dragons_lair_data['status'] == 'New Game']['name']
+unfetched_games = prev_final_output.loc[prev_final_output['id'] == 'Unknown']['name']
+games_to_fetch = pd.concat([new_games, unfetched_games], ignore_index=True).drop_duplicates()
+
+if not games_to_fetch.empty:
+    ids_to_get = games_to_fetch.tolist()
+    id_output = pd.DataFrame(call_bgg_for_id(ids_to_get), columns=['name', 'id'])
+
+    updated_bgg_data = pd.concat([prev_bgg_data, id_output]).drop_duplicates(subset=['name'], keep='last')
+
+    print(updated_bgg_data)
+else:
+    print("No new games to fetch.")
+    updated_bgg_data = prev_bgg_data
+
+# Get the details for the games
+# only run for games that have an ID and are not in the previous enriched data
+games_to_enrich = updated_bgg_data.loc[(updated_bgg_data['id'] != 'Unknown') & (~updated_bgg_data['id'].isin(prev_bgg_enriched_data['id']))]
+bgg_enriched = call_bgg_for_details(games_to_enrich)
+bgg_enriched = pd.concat([bgg_enriched, prev_bgg_enriched_data]).drop_duplicates(subset=['id'], keep='last')
+
+# Merge the two DataFrames
+df_merge = prev_dragons_lair_data.merge(updated_bgg_data, how='left', on='name')
+df_merge = df_merge.merge(bgg_enriched, how='left', on='id')
+
+updated_bgg_data.to_csv('output/bgg_output.csv', index=False)
+bgg_enriched.to_csv('output/bgg_enrich.csv', index=False)
+df_merge.to_csv('output/final_data.csv', index=False)
+
+print(df_merge.head(50))
+
+
+'''
 # Get the gameid details from BoardGameGeek
 all_games = prev_dragons_lair_data['name'].tolist()
-df_bgg = pd.DataFrame(get_bgg_id(all_games), columns=['name', 'id'])
+df_bgg = pd.DataFrame(call_bgg_for_id(all_games), columns=['name', 'id'])
 
 # Get rating game details from BoardGameGeek
-bgg_enrich = get_enriched_data(prev_bgg_data)
+bgg_enrich = call_bgg_for_details(prev_bgg_data)
 
     
 
@@ -141,7 +175,7 @@ df_bgg.to_csv('output/bgg_output.csv', index=False)
 bgg_enrich.to_csv('output/bgg_enrich.csv', index=False)
 df_merge.to_csv('output/final_data.csv', index=False)
 
-
+'''
 
 
 # Open the output

@@ -113,7 +113,7 @@ def generate_output(new_run):
     '''
     # Load the previous run
     try:
-        previous_run = pd.read_csv('dragonslair.csv')
+        previous_run = pd.read_csv('output/dragonslair.csv')
     except FileNotFoundError:
         # If the file doesn't exist, create an empty DataFrame
         previous_run = pd.DataFrame(columns=['name', 'state_current', 'state_previous' , 'state_since', 'status'])
