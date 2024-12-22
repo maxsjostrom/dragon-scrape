@@ -15,10 +15,11 @@ Dragon-Scrape is a Python project for scraping and tracking board game availabil
 
 - Python 3.8 or higher
 - Required libraries:
-  - `requests`
   - `beautifulsoup4`
-  - `pandas`
+  - `requests`
   - `json`
+  - `pandas`
+  - `lxml`
   - `datetime`
 
 
