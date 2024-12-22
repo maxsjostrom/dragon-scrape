@@ -27,7 +27,6 @@ def get_game_details(game_id):
             bgg_rank = game.find(".//statistics/ratings/ranks/rank[@name='boardgame']").get("value")
             #description = game.find("description").text
             print(f"Title: {title}, Year: {year}, Best with: {best_with}, Reccomended with: {recommended_with}, Avg rating: {avg_rating}, No of ratings: {no_ratings}, bgg_rank: {bgg_rank}")
-            #print(f"Title: {title}, Year: {year}")
 
             return pd.DataFrame({
                         'title': [title], 
@@ -116,75 +115,40 @@ def call_bgg_for_details(bgg_data):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------
-# Import the scraped data
-prev_dragons_lair_data = pd.read_csv('output/dragonslair.csv')
-prev_bgg_data = pd.read_csv('output/bgg_output.csv')
-prev_bgg_enriched_data = pd.read_csv('output/bgg_enrich.csv')
-prev_bgg_enriched_data['id'] = prev_bgg_enriched_data['id'].astype(str)
-prev_final_output = pd.read_csv('output/final_data.csv')
+''
+if __name__ == "__main__":
+    # Import the scraped data
+    prev_dragons_lair_data = pd.read_csv('output/dragonslair.csv')
+    prev_bgg_data = pd.read_csv('output/bgg_output.csv')
+    prev_bgg_enriched_data = pd.read_csv('output/bgg_enrich.csv')
+    prev_bgg_enriched_data['id'] = prev_bgg_enriched_data['id'].astype(str)
+    prev_final_output = pd.read_csv('output/final_data.csv')
 
-new_games = prev_dragons_lair_data.loc[prev_dragons_lair_data['status'] == 'New Game']['name']
-unfetched_games = prev_final_output.loc[prev_final_output['id'] == 'Unknown']['name']
-games_to_fetch = pd.concat([new_games, unfetched_games], ignore_index=True).drop_duplicates()
+    new_games = prev_dragons_lair_data.loc[prev_dragons_lair_data['status'] == 'New Game']['name']
+    unfetched_games = prev_final_output.loc[prev_final_output['id'] == 'Unknown']['name']
+    games_to_fetch = pd.concat([new_games, unfetched_games], ignore_index=True).drop_duplicates()
 
-if not games_to_fetch.empty:
-    ids_to_get = games_to_fetch.tolist()
-    id_output = pd.DataFrame(call_bgg_for_id(ids_to_get), columns=['name', 'id'])
-
-    updated_bgg_data = pd.concat([prev_bgg_data, id_output]).drop_duplicates(subset=['name'], keep='last')
-
-    print(updated_bgg_data)
-else:
-    print("No new games to fetch.")
-    updated_bgg_data = prev_bgg_data
-
-# Get the details for the games
-# only run for games that have an ID and are not in the previous enriched data
-games_to_enrich = updated_bgg_data.loc[(updated_bgg_data['id'] != 'Unknown') & (~updated_bgg_data['id'].isin(prev_bgg_enriched_data['id']))]
-bgg_enriched = call_bgg_for_details(games_to_enrich)
-bgg_enriched = pd.concat([bgg_enriched, prev_bgg_enriched_data]).drop_duplicates(subset=['id'], keep='last')
-
-# Merge the two DataFrames
-df_merge = prev_dragons_lair_data.merge(updated_bgg_data, how='left', on='name')
-df_merge = df_merge.merge(bgg_enriched, how='left', on='id')
-
-updated_bgg_data.to_csv('output/bgg_output.csv', index=False)
-bgg_enriched.to_csv('output/bgg_enrich.csv', index=False)
-df_merge.to_csv('output/final_data.csv', index=False)
-
-print(df_merge.head(50))
-
-
-'''
-# Get the gameid details from BoardGameGeek
-all_games = prev_dragons_lair_data['name'].tolist()
-df_bgg = pd.DataFrame(call_bgg_for_id(all_games), columns=['name', 'id'])
-
-# Get rating game details from BoardGameGeek
-bgg_enrich = call_bgg_for_details(prev_bgg_data)
-
+    # Get the IDs for the games
+    if not games_to_fetch.empty:
+        ids_to_get = games_to_fetch.tolist()
+        id_output = pd.DataFrame(call_bgg_for_id(ids_to_get), columns=['name', 'id'])
+        updated_bgg_data = pd.concat([prev_bgg_data, id_output]).drop_duplicates(subset=['name'], keep='last')
+    else:
+        print("No new games to fetch.")
+        updated_bgg_data = prev_bgg_data
     
 
-# Merge the two DataFrames
-df_merge = prev_dragons_lair_data.merge(prev_bgg_data, how='left', on='name')
-df_merge = df_merge.merge(bgg_enrich, how='left', on='id')
-print(df_merge.head(50))
+    # Get the details for the games
+    # only run for games that have an ID and are not in the previous enriched data
+    games_to_enrich = updated_bgg_data.loc[(updated_bgg_data['id'] != 'Unknown') & (~updated_bgg_data['id'].isin(prev_bgg_enriched_data['id']))]
+    bgg_enriched = call_bgg_for_details(games_to_enrich)
+    bgg_enriched = pd.concat([bgg_enriched, prev_bgg_enriched_data]).drop_duplicates(subset=['id'], keep='last')
 
-# Save the outputs
-df_bgg.to_csv('output/bgg_output.csv', index=False)
-bgg_enrich.to_csv('output/bgg_enrich.csv', index=False)
-df_merge.to_csv('output/final_data.csv', index=False)
+    # Merge the two DataFrames
+    df_merge = prev_dragons_lair_data.merge(updated_bgg_data, how='left', on='name')
+    df_merge = df_merge.merge(bgg_enriched, how='left', on='id')
 
-'''
+    updated_bgg_data.to_csv('output/bgg_output.csv', index=False)
+    bgg_enriched.to_csv('output/bgg_enrich.csv', index=False)
+    df_merge.to_csv('output/final_data.csv', index=False)
 
-
-# Open the output
-# Create list of games without IDs
-    # Get the IDs from BGG
-    # Update the list of games with IDs
-# Check the bgg_output.csv file for IDs without details
-    # Get the details from BGG
-    # Save the details to bgg_enrich.csv
-# Merge the dragonslair.csv with bgg_output.csv
-# Merge the merged file with bgg_enrich.csv
-# Save the final file as final_data.csv
