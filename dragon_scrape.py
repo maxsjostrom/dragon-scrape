@@ -31,7 +31,6 @@ def fetch_page(page_number):
         return None
     
 
-
 def parse_games(page_content):
     '''
     Parse the HTML content of a page and extract the game data.
@@ -66,8 +65,6 @@ def parse_games(page_content):
                 })
             
     return games
-
-
 
 
 def scrape_all_pages():
@@ -107,9 +104,8 @@ def clean_data(all_games):
     # Replace commas with semicolons in the game names
     df['name'] = df['name'].str.replace(',', ';')
 
-
-
     return df
+
 
 def generate_output(new_run):
     '''
@@ -117,7 +113,7 @@ def generate_output(new_run):
     '''
     # Load the previous run
     try:
-        previous_run = pd.read_csv('dragonslair.csv')
+        previous_run = pd.read_csv('output/dragonslair.csv')
     except FileNotFoundError:
         # If the file doesn't exist, create an empty DataFrame
         previous_run = pd.DataFrame(columns=['name', 'state_current', 'state_previous' , 'state_since', 'status'])
