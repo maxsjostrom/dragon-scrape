@@ -7,6 +7,8 @@ Dragon-Scrape is a Python project for scraping and tracking board game availabil
 - Scrapes multiple pages of game data from Dragonslair's website.
 - Extracts and cleans game names and availability status.
 - Tracks changes in game availability over time.
+- Enriches game data with additional details from the BGG API.
+- Handles API rate limits and retries.
 - Outputs results to CSV files for easy comparison.
 
 ## Requirements
@@ -37,12 +39,23 @@ Removes invalid entries and standardizes the availability status (Available, Una
 
 Compares the current scrape with the previous run, tracking changes in game availability and identifying new games.
 
+### Enriching Data with BGG API:
+
+1. **Fetching Game IDs**: The script calls the BGG API to fetch game IDs for new or unfetched games.
+2. **Fetching Game Details**: Once the game IDs are obtained, the script fetches additional details such as title, year, average rating, number of ratings, and BGG rank.
+3. **Handling Rate Limits**: The script includes logic to handle API rate limits by implementing retries with exponential backoff.
+
+
 ## Output:
 
 Saves the results in dragonslair.csv for future comparisons and generates dragonslair_changes.csv for quick analysis of changes.
 
-  - `dragonslair.csv`: A CSV file containing the current state of all games.
-  - `dragonslair_changes.csv`: A CSV file highlighting changes in game availability since the last run.
+The script generates the following CSV files in the `output` directory:
+- `dragonslair.csv`: Contains the scraped game data from Dragonslair.
+- `bgg_output.csv`: Contains the game IDs fetched from the BGG API.
+- `bgg_enrich.csv`: Contains the enriched game details from the BGG API.
+- `final_data.csv`: Merged data from Dragonslair and BGG, including game availability and additional details.
+
 
 ### Example Output
 `dragonslair_changes.csv`:
