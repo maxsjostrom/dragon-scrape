@@ -51,10 +51,11 @@ Compares the current scrape with the previous run, tracking changes in game avai
 Saves the results in dragonslair.csv for future comparisons and generates dragonslair_changes.csv for quick analysis of changes.
 
 The script generates the following CSV files in the `output` directory:
-- `dragonslair.csv`: Contains the scraped game data from Dragonslair.
-- `bgg_output.csv`: Contains the game IDs fetched from the BGG API.
-- `bgg_enrich.csv`: Contains the enriched game details from the BGG API.
-- `final_data.csv`: Merged data from Dragonslair and BGG, including game availability and additional details.
+ - `dragonslair.csv`: Contains the scraped game data from Dragonslair.
+ - `dragonslair_changes.csv`: A CSV file highlighting changes in game availability since the last run.
+ - `bgg_output.csv`: Contains the game IDs fetched from the BGG API.
+ - `bgg_enrich.csv`: Contains the enriched game details from the BGG API.
+ - `final_data.csv`: Merged data from Dragonslair and BGG, including game availability and additional details.
 
 
 ### Example Output
@@ -65,5 +66,11 @@ The script generates the following CSV files in the `output` directory:
 | Example Game 1    | Unavailable    | Available     | 2024-12-21 10:00:00 | State Change |
 | Example Game 2    | Available      | Unavailable   | 2024-12-21 10:00:00 | State Change |
 | Example New Game  | N/A            | Available     | 2024-12-21 10:00:00 | New Game     |
+  
+`final_data.csv`:
 
-
+| Name              | State Previous | State Current | State Since         | Status       | Title           | Year | Avg Rating | No of Ratings | BGG Rank |
+|-------------------|----------------|---------------|---------------------|--------------|-----------------|------|------------|---------------|----------|
+| Example Game 1    | Unavailable    | Available     | 2024-12-21 10:00:00 | State Change | Example Title 1 | 2020 | 7.5        | 1500          | 500      |
+| Example Game 2    | Available      | Unavailable   | 2024-12-21 10:00:00 | State Change | Example Title 2 | 2018 | 8.0        | 2000          | 300      |
+| Example New Game  | N/A            | Available     | 2024-12-21 10:00:00 | New Game     | Example Title 3 | 2021 | 6.5        | 500           | 1000     |
