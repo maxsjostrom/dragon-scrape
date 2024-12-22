@@ -4,7 +4,10 @@ from dragon_scrape import fetch_page, parse_games, scrape_all_pages, clean_data,
 from bgg_api import clean_name, get_bgg_id, get_game_details, call_bgg_for_id, call_bgg_for_details
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='output/dragonlog.log', level=logging.INFO)
+logging.basicConfig(filename='output/dragonlog.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 if __name__ == '__main__':
     scrape_results = scrape_all_pages()
