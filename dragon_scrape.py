@@ -3,6 +3,10 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import json
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='output/dragonlog.log', level=logging.INFO)
 
 BASE_URL = "https://dragonslair.se/lanebiblioteket/"
 HEADERS = {
@@ -24,9 +28,10 @@ def fetch_page(page_number):
     # Make the request
     response = requests.get(BASE_URL, headers=HEADERS, params=params)
     if response.status_code == 200:
+        logger.info(f"Fetched page {page_number}")
         return response.text
     else:
-        print(f"Failed to fetch page {page_number}. Status code: {response.status_code}")
+        logger.warning(f"Failed to fetch page {page_number}. Status code: {response.status_code}")
         return None
     
 
@@ -75,14 +80,14 @@ def scrape_all_pages():
 
     # Loop through all pages until no more games are found
     while page_number < 20:
-        print(f"Fetching page {page_number}...")
+        logger.info(f"Fetching page {page_number}...")
         page_content = fetch_page(page_number)
         if not page_content:
             break  # Stop if request fails
         
         games = parse_games(page_content)
         if not games:
-            print("No more games found. Stopping.")
+            logger.warning("No more games found. Stopping.")
             break  # Stop if no more games are found on the page
         
         all_games.extend(games)
@@ -144,11 +149,3 @@ def generate_output(new_run):
     differences.to_csv('output/dragonslair_changes.csv', index=False)
 
     return comparison, differences
-
-
-if __name__ == '__main__':
-    scrape_results = scrape_all_pages()
-    output, updates = generate_output(clean_data(scrape_results))
-    print('Scraping complete.')
-    print(updates)
-
