@@ -1,5 +1,6 @@
 import pandas as pd
 import logging
+import os
 from dragon_scrape import fetch_page, parse_games, scrape_all_pages, clean_data, generate_output
 from bgg_api import clean_name, get_bgg_id, get_game_details, call_bgg_for_id, call_bgg_for_details
 
@@ -15,17 +16,23 @@ if __name__ == '__main__':
     logger.info('Scraping complete.')
     logger.info(f'Stock availability updates: {updates}')
 
+    first_run = not os.path.exists('output/dragonslair.csv')
 
-    # Import the scraped data
-    prev_dragons_lair_data = pd.read_csv('output/dragonslair.csv')
-    prev_bgg_data = pd.read_csv('output/bgg_output.csv')
-    prev_bgg_enriched_data = pd.read_csv('output/bgg_enrich.csv')
-    prev_bgg_enriched_data['id'] = prev_bgg_enriched_data['id'].astype(str)
-    prev_final_output = pd.read_csv('output/final_data.csv')
+    if first_run:
+    # if first run, only get IDs for new games
+        games_to_fetch = output.loc[output['status'] == 'New Game']['name']
 
-    new_games = prev_dragons_lair_data.loc[prev_dragons_lair_data['status'] == 'New Game']['name']
-    unfetched_games = prev_final_output.loc[prev_final_output['id'] == 'Unknown']['name']
-    games_to_fetch = pd.concat([new_games, unfetched_games], ignore_index=True).drop_duplicates()
+    else:
+    # if not first run, get IDs for new games and games with unknown IDs
+        prev_dragons_lair_data = pd.read_csv('output/dragonslair.csv')
+        prev_bgg_data = pd.read_csv('output/bgg_output.csv')
+        prev_bgg_enriched_data = pd.read_csv('output/bgg_enrich.csv')
+        prev_bgg_enriched_data['id'] = prev_bgg_enriched_data['id'].astype(str)
+        prev_final_output = pd.read_csv('output/final_data.csv')
+
+        new_games = prev_dragons_lair_data.loc[prev_dragons_lair_data['status'] == 'New Game']['name']
+        unfetched_games = prev_final_output.loc[prev_final_output['id'] == 'Unknown']['name']
+        games_to_fetch = pd.concat([new_games, unfetched_games], ignore_index=True).drop_duplicates()
 
     # Get the IDs for the games
     if not games_to_fetch.empty:
@@ -42,6 +49,7 @@ if __name__ == '__main__':
     # only run for games that have an ID and are not in the previous enriched data
     games_to_enrich = updated_bgg_data.loc[(updated_bgg_data['id'] != 'Unknown') & (~updated_bgg_data['id'].isin(prev_bgg_enriched_data['id']))]
     logger.info(f"Fetching details for {len(games_to_enrich)} games...")
+    # call the BGG API for the details
     bgg_enriched = call_bgg_for_details(games_to_enrich)
     bgg_enriched = pd.concat([bgg_enriched, prev_bgg_enriched_data]).drop_duplicates(subset=['id'], keep='last')
 
