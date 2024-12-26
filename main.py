@@ -43,8 +43,6 @@ if __name__ == '__main__':
         unfetched_games = prev_final_output.loc[prev_final_output['id'] == 'Unknown']['name']
         games_to_fetch = pd.concat([new_games, unfetched_games], ignore_index=True).drop_duplicates()
 
-    print(prev_bgg_enriched_data)
-
     # Get the IDs for the games
     if not games_to_fetch.empty:
         ids_to_get = games_to_fetch.tolist()
