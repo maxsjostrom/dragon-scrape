@@ -68,8 +68,6 @@ def get_game_details(game_id):
     params = {'id': game_id,
               'stats': 1}
     response = requests.get(url, params=params)
-    
-    print(response.status_code)
 
     for attempt in range(3):
         logger.info(f"Fetching details for game: {game_id}")

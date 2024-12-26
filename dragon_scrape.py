@@ -4,6 +4,10 @@ import pandas as pd
 import json
 from datetime import datetime
 import logging
+import os
+
+os.makedirs('output', exist_ok=True)
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='output/dragonlog.log',
