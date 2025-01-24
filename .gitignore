@@ -1,3 +1,4 @@
 .DS_Store
 output/dragonlog.log
 __pycache__/
+/output

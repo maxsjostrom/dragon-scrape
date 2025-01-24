@@ -7,15 +7,15 @@ from bgg_api import call_bgg_for_id, call_bgg_for_details
 # Get the directory of the script and set it as the working directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
+print(script_dir)
 
 # Create the output directory if it doesn't exist, relative to the script's directory
 output_dir = os.path.join(script_dir, 'output')
-print(f"Output directory: {output_dir}")
+print(output_dir)
 os.makedirs(output_dir, exist_ok=True) 
 
 # Set up logging
 log_file = os.path.join(output_dir, 'dragonlog.log')
-print(f"Log file: {log_file}")
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=log_file,
     level=logging.INFO,
