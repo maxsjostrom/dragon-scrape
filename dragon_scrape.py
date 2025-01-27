@@ -56,7 +56,11 @@ def parse_games(page_content):
             try:
                 product_json = json.loads(product_data)
                 name = product_json.get('name', 'Unknown')
-                name = name.replace('-Lånebiblioteket- ', '').strip()
+
+                # Remove unwanted strings from the name
+                strings_to_remove = ['-Lånebiblioteket- ', '-Lånebiblioteket -']
+                for string in strings_to_remove:
+                    name = name.replace(string, '').strip()
             except:
                 product_json = None
                 name = "Unknown"
@@ -120,7 +124,8 @@ def generate_output(new_run):
     '''
     # Load the previous run
     try:
-        previous_run = pd.read_csv('output/dragonslair.csv')
+        previous_run = pd.read_csv('output/final_data.csv')
+        previous_run = previous_run[['name', 'state_current', 'state_previous' , 'state_since', 'status']]
     except FileNotFoundError:
         # If the file doesn't exist, create an empty DataFrame
         previous_run = pd.DataFrame(columns=['name', 'state_current', 'state_previous' , 'state_since', 'status'])
@@ -137,7 +142,8 @@ def generate_output(new_run):
     # Update the 'status' column based on the state changes
     comparison['status'] = 'No Change'
     comparison.loc[comparison['state_previous'] != comparison['state_current'], 'status'] = 'State Change'
-    comparison.loc[comparison['state_previous'].isna(), 'status'] = 'New Game'
+    comparison.loc[comparison['state_previous'].isna() & ~comparison['state_current'].isna(), 'status'] = 'New Game'
+    comparison.loc[~comparison['state_previous'].isna() & comparison['state_current'].isna(), 'status'] = 'Removed'
 
     # Update the 'state_since' column to the current time where applicable
     comparison.loc[comparison['state_since'].isna(), 'state_since'] = current_time
@@ -147,8 +153,6 @@ def generate_output(new_run):
     comparison = comparison[['name', 'state_previous', 'state_current', 'state_since', 'status']]
 
     # Save the new run
-    comparison.to_csv('output/dragonslair.csv', index=False)
     differences = comparison[(comparison['status'] == 'State Change') | (comparison['status'] == 'New Game')]
-    differences.to_csv('output/dragonslair_changes.csv', index=False)
 
     return comparison, differences
