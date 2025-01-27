@@ -110,6 +110,7 @@ def clean_data(all_games):
     df = pd.DataFrame(all_games)
     # Replace the state values to be consistently in English
     df.loc[df['state'] == 'Beställningsvara', 'state'] = 'Unavailable'
+    df.loc[df['state'] == 'Slut i lager', 'state'] = 'Unavailable'
     # Remove any games with the name 'Unknown'
     df = df[df['name'] != 'Unknown'].reset_index(drop=True)
     # Replace commas with semicolons in the game names
