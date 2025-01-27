@@ -4,12 +4,11 @@ Dragon-Scrape is a Python project for scraping and tracking board game availabil
 
 ## Features
 
-- Scrapes multiple pages of game data from Dragonslair's website.
-- Extracts and cleans game names and availability status.
-- Tracks changes in game availability over time.
-- Enriches game data with additional details from the BGG API.
-- Handles API rate limits and retries.
-- Outputs results to CSV files for easy comparison.
+- **Web Scraping**: Fetches game data from the Dragon's Lair website.
+- **Data Cleaning**: Processes and cleans game names and availability status.
+- **Data Enrichment**: Integrates with the BoardGameGeek API to fetch additional game details.
+- **API Rates**: Handles API rate limits and retries.
+- **Streamlit Application**: Run the script and analyze the output with a Streamlit application.
 
 ## Requirements
 
@@ -21,7 +20,24 @@ Dragon-Scrape is a Python project for scraping and tracking board game availabil
   - `pandas`
   - `lxml`
   - `datetime`
+  - `logging`
+  - `os`
+  - `streamlit`
 
+  ## Project Structure
+The project is organized as follows:
+```plaintext
+dragon-scrape/
+    ├── assets/
+    ├── example_output/
+    ├── output/
+    ├── streamlit/
+    ├── .gitignore
+    ├── bgg_api.py
+    ├── dragon_scrape.py
+    ├── main.py
+    ├── README.md
+```
 
 ## How It Works
 ### Scraping Pages:
@@ -46,32 +62,63 @@ Compares the current scrape with the previous run, tracking changes in game avai
 2. **Fetching Game Details**: Once the game IDs are obtained, the script fetches additional details such as title, year, average rating, number of ratings, and BGG rank.
 3. **Handling Rate Limits**: The script includes logic to handle API rate limits by implementing retries with exponential backoff.
 
+### Streamlit App
 
-## Output:
+Visualizes the output in a Streamlit App where you can enrich the output with games you've played or wish to play. You can filter and break down the results and deep-dive into the library to find your next game.
 
-Saves the results in dragonslair.csv for future comparisons and generates dragonslair_changes.csv for quick analysis of changes.
 
-The script generates the following CSV files in the `output` directory:
- - `dragonslair.csv`: Contains the scraped game data from Dragonslair.
- - `dragonslair_changes.csv`: A CSV file highlighting changes in game availability since the last run.
- - `bgg_output.csv`: Contains the game IDs fetched from the BGG API.
- - `bgg_enrich.csv`: Contains the enriched game details from the BGG API.
- - `final_data.csv`: Merged data from Dragonslair and BGG, including game availability and additional details.
+### Key Files and Directories
+- `bgg_api.py`: Contains functions to interact with the BoardGameGeek API.
+- `dragon_scrape.py`: Contains functions to scrape the Dragon's Lair website.
+- `main.py`: The main entry point of the application.
+- `example_output/`: Directory containing example output files.
+- `streamlit/`: Directory containing Streamlit app files.
+- `assets/`: Directory containing assets used in the project.
+- `.gitignore`: Specifies files and directories to be ignored by Git.
+
+### How To Use the Tool
+
+#### Setup
+1. Clone the repository:
+```shell
+git clone <repository-url>
+cd dragon-scrape
+```
+
+2. Install the necessary dependencies
+```shell
+pip install -r requirements.txt
+```
+
+#### Running the Scraper
+1. Start the scraping process:
+```shell 
+python main.py
+```
+2. The scraper will fetch game data from the Dragon's Lair website and save the output files in the output/ directory.
+
+#### Running the Streamlit App
+1. Navigate to the streamlit directory:
+```shell
+cd streamlit
+```
+2. Run the Streamlit app:
+```shell
+streamlit run Home.py
+```
+3. Open the provided URL in your web browser to interact with the app.
+
 
 
 ### Example Output
-`dragonslair_changes.csv`:
-
-| Name              | State Previous | State Current | State Since         | Status       |
-|-------------------|----------------|---------------|---------------------|--------------|
-| Example Game 1    | Unavailable    | Available     | 2024-12-21 10:00:00 | State Change |
-| Example Game 2    | Available      | Unavailable   | 2024-12-21 10:00:00 | State Change |
-| Example New Game  | N/A            | Available     | 2024-12-21 10:00:00 | New Game     |
   
 `final_data.csv`:
 
-| Name              | State Previous | State Current | State Since         | Status       | Title           | Year | Avg Rating | No of Ratings | BGG Rank |
-|-------------------|----------------|---------------|---------------------|--------------|-----------------|------|------------|---------------|----------|
-| Example Game 1    | Unavailable    | Available     | 2024-12-21 10:00:00 | State Change | Example Title 1 | 2020 | 7.5        | 1500          | 500      |
-| Example Game 2    | Available      | Unavailable   | 2024-12-21 10:00:00 | State Change | Example Title 2 | 2018 | 8.0        | 2000          | 300      |
-| Example New Game  | N/A            | Available     | 2024-12-21 10:00:00 | New Game     | Example Title 3 | 2021 | 6.5        | 500           | 1000     |
+| title                | id          | year | best_with | recommended_with | avg_rating | no_ratings | bgg_rank | state_current | state_previous | state_since          | status       |
+|----------------------|-------------|------|-----------|------------------|------------|------------|----------|---------------|----------------|----------------------|--------------|
+| Catan                | 13          | 1995 | 4         | 3                | 7.2        | 100000     | 1        | Available     | Unavailable    | 2023-10-01 12:00:00  | State Change |
+| Pandemic             | 14          | 2008 | 4         | 4                | 7.6        | 80000      | 2        | Available     | Available      | 2023-10-01 12:00:00  | No Change    |
+| Terraforming Mars    | 15          | 2016 | 5         | 4                | 8.4        | 60000      | 3        | Unavailable   | Available      | 2023-10-01 12:00:00  | State Change |
+
+Streamlit Application Example:
+![Streamlit Application Example](assets/streamlit-example.png)
