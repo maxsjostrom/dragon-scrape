@@ -1,14 +1,23 @@
 import streamlit as st
 import pandas as pd
 import subprocess
+import sys
+
 
 # Make streamlit layout wide
 st.set_page_config(layout="wide")
+st.logo('../assets/dragons-lair-logo.webp')
 
 # Function to run the main.py script
 def run_main_script():
-    # Ensure required modules are installed
-    st.error('Function not implemented. Fetching most recent data...')
+
+    try:
+        st.write('Running the update script...')
+        subprocess.run([f"{sys.executable}", "../main.py"])
+        st.success('Update script completed successfully.')
+    except Exception as e:
+        st.write('Error running the update script.')
+        st.error(f"Error: {e}")
 
 # Load the data
 data_path = '../output/final_data.csv'
@@ -16,21 +25,16 @@ df = pd.read_csv(data_path, parse_dates=['state_since']
                  ,dtype={'id': str, 'bgg_rank': str, 'year': str,
                         'avg_rating': float, 'played': bool, 'wishlist': bool})
 
-
 # Display the data
-st.title('Dragon\'s Lair Lånebibliotek')
+st.image('../assets/dragons-lair-logo.webp', width=500)
+st.title('Lånebiblioteket')
 
 # Button to run the main script
 with st.container(border=True):
     st.write('### Update Portfolio')
     if st.button('Run Update Script'):
-        try:
-            st.write('#### Log')
-            st.write('Running the update script...')
-            run_main_script()
-            #st.success('Update script completed successfully.')
-        except Exception as e:
-            st.error(f"Error: {e}")
+        st.write('#### Log')
+        run_main_script()
     st.write(f'***Last updated: {df["state_since"].max().strftime("%Y-%m-%d")}***')
 
 

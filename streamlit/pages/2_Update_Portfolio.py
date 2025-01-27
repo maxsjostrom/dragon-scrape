@@ -4,13 +4,14 @@ import numpy as np
 
 # Make Streamlit layout wide
 st.set_page_config(layout="wide", page_title="Update Portfolio")
+st.logo('../assets/dragons-lair-logo.webp')
 
 # Load the data
 data_path = '../output/final_data.csv'
 df = pd.read_csv(data_path)
-
-# Display the data
-st.title('Dragon\'s Lair Lånebibliotek')
+ 
+st.image('../assets/dragons-lair-logo.webp', width=500)
+st.title('Lånebiblioteket')
 
 # Filter options
 st.sidebar.header('Filter Options')
